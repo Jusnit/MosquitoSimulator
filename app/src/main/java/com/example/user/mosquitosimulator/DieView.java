@@ -14,6 +14,7 @@ import android.view.View;
 
 /**
  * Created by Lab109 on 2015/5/19.
+ * 蚊子死時的動畫
  */
 public class DieView extends View {
     private float mosX,mosY;
@@ -62,18 +63,15 @@ public class DieView extends View {
             start = true;
             int counter = 1;
             while (counter <= 15) {
-                // if (ifDraw()) {
                 if (counter % 2 != 0) {
-                    //whichMos = 1;
                     disMosDrawable = mosShockedDrawable;
-                    Log.v("customed", "變藍");
+                    //Log.v("customed", "變藍");
                 } else {
                     //whichMos = 0;
                     disMosDrawable = mosDrawable;
-                    Log.v("customed", "變黃的");
+                    //Log.v("customed", "變黃");
                 }
                 counter++;
-                //}
                 Message msg3 = Message.obtain();
                 msg3.obj = view;
                 handler.sendMessage(msg3);

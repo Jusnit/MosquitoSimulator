@@ -29,11 +29,7 @@ public class Life {
             //Log.v("customed", "drawHeart");
         }
     }
-    public void drawHeartThread(Canvas canva,Paint paint){
-        (new Thread(new heartRunnable(canva,paint))).start();
-    }
-
-    class heartRunnable implements Runnable{
+    /*class heartRunnable implements Runnable{
         private Canvas innerCanva;
         private Paint innerPaint;
         public heartRunnable(Canvas canva,Paint paint){
@@ -43,8 +39,7 @@ public class Life {
         public void run(){
             drawHeart(innerCanva,innerPaint);
         }
-    }
-
+    }*/
    public void minusLife(){
        lifeNum--;
    }

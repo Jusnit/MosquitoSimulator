@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 /**
  * Created by user on 2015/5/17.
+ * 對玩家發出的聲音進行訊號處理
  */
 public class VProcessor {
     public boolean win = false;
@@ -32,26 +33,17 @@ public class VProcessor {
     static final int frequency = 8000;
     static final int channelConfiguration =AudioFormat.CHANNEL_IN_MONO;
     static final int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-    int recBufSize, playBufSize;
+    int recBufSize;
     AudioRecord audioRecord;
-    //AudioTrack audioTrack;
-
     public VProcessor(Mosquito mosView,checkIntersect check,Activity mainActivity) {
         this.check = check;
         recBufSize = AudioRecord.getMinBufferSize(frequency,
                 channelConfiguration, audioEncoding);
-
-        /*playBufSize = AudioTrack.getMinBufferSize(frequency,
-                channelConfiguration, audioEncoding);*/
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, frequency,
                 channelConfiguration, audioEncoding, recBufSize);
         buffer = new short[recBufSize];
         this.mosView = mosView;
         this.mainActivity = mainActivity;
-
-        /*audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, frequency,
-                channelConfiguration, audioEncoding,
-                playBufSize, AudioTrack.MODE_STREAM);*/
     }
 
     public void RecordStart() {
@@ -64,9 +56,6 @@ public class VProcessor {
         Handler handler = new Handler(Looper.getMainLooper()){
             @Override
             public void handleMessage(Message msg) {
-               // mosView.progress = msg.arg1;
-                //((Mosquito)(msg.obj)).invalidate();
-                //Activity actTemp = (Activity)msg.obj;
                 if(msg.what == 4) {
                     Intent intent = new Intent(mainActivity, WinActivity.class);
                     intent.putExtra("time", SystemClock.uptimeMillis()-mosView.timeFlag);
@@ -86,9 +75,6 @@ public class VProcessor {
                 else if(msg.what == 3){
                     mosView.disBaseDrawable = mosView.angryBaseDrawable;
                 }
-
-                    //mainActivity.setContentView(R.layout.activity_win);
-                    //((View)(msg.obj)).invalidate();
                 super.handleMessage(msg);
 
             }
@@ -100,7 +86,7 @@ public class VProcessor {
                 short[] innerBuffer = new short[recBufSize];
                 audioRecord.startRecording();
                     while (isRecording && !check.die && !win) {
-                        //保存數據到緩衝區a
+                        //保存數據到緩衝區
                         if(!recordBlock) {
                             audioRecord.startRecording();
                           //  Log.v("customed", "持續recording中...");
@@ -110,22 +96,14 @@ public class VProcessor {
                            // byte[] tmpBuf = new byte[bufferReadResult];
                             short[] tmpBuf = new short[bufferReadResult];
                             System.arraycopy(innerBuffer, 0, tmpBuf, 0, bufferReadResult);
-                            //寫入數據
-                            //audioTrack.write(tmpBuf, 0, tmpBuf.length);
                             audioRecord.stop();
                             recordBlock = true;
                             pitchTracking(tmpBuf);
-
-
                            // Log.e("customed", "Audio Blocking....");
-                            //audioRecord.startRecording();
+
                         }
                     }
-
-                //audioTrack.stop();
-               // audioRecord.stop();
             } catch (Throwable t) {
-                //Toast.makeText(testRecord.this, t.getMessage(), 1000);
             }
         }
 
@@ -152,10 +130,8 @@ public class VProcessor {
                 //byte[] sum = new byte[limit];
                 int[] sum = new int[limit];
                 for (int s = 0; s < limit; s++) {
-                   // Log.v("customed","count = "+String.valueOf(count)+",進入第二圈for");
                     int counter = 0;
                     for (int t = s; t < limit - 1; t++) {
-                       // Log.v("customed","count = "+String.valueOf(count)+",進入第三圈for");
                         //Log.v("customed","voice["+String.valueOf(index1+t)+"]:"+String.valueOf(voice[index1+t]));
                        // sum[s] = (byte)(sum[s] + Math.abs(voice[index1 + t] * voice[index1 + (t - s)]));
                         sum[s] = (sum[s] + Math.abs(voice[index1 + t] * voice[index1 + (t - s)]));
@@ -173,36 +149,34 @@ public class VProcessor {
                             break;
                         }
                     }
-
-                    //counter++;
                 }
                 if(check.die)
                     break;
-               /* Message message = Message.obtain();
-                message.arg1 = ( FF > 300) ? mosView.progress + 1 : mosView.progress;
-                message.obj = mosView;
-                handler.sendMessage(message);*/
                 if(mosView.progress > 0 ) {
                     int oldProgress = mosView.progress;
                     mosView.progress = (FF > 1100 && mosView.progress >= 0 && mosView.progress < 99) ? mosView.progress + 2 : mosView.progress - 1;//edit this
                     if(mosView.progress >= 25 && oldProgress < 25){
                         Message message = Message.obtain();
-                        message.what = 0;// 0->sleepbackground change to angry
+                        // 0->sleepbackground change to angry
+                        message.what = 0;
                         handler.sendMessage(message);
                     }
                     else if(mosView.progress < 25 && oldProgress >= 25){
                         Message message = Message.obtain();
-                        message.what = 1;// 1 -> angrybackground change to sleep
+                        // 1 -> angrybackground change to sleep
+                        message.what = 1;
                         handler.sendMessage(message);
                     }
                     else if(mosView.progress >= 75 && oldProgress < 75){
                         Message message = Message.obtain();
-                        message.what = 2;// 2 -> angrybackground change to bigeye
+                        // 2 -> angrybackground change to bigeye
+                        message.what = 2;
                         handler.sendMessage(message);
                     }
                     else if(mosView.progress < 75 && oldProgress >= 75){
                         Message message = Message.obtain();
-                        message.what = 3;// 3 -> bigEyeBackground change to angry
+                        // 3 -> bigEyeBackground change to angry
+                        message.what = 3;
                         handler.sendMessage(message);
                     }
 
@@ -212,7 +186,8 @@ public class VProcessor {
                 if(mosView.progress >= 99 && !check.die){
                     win = true;
                     Message message = Message.obtain();
-                    message.what = 4; // 4-> win
+                    // 4-> win
+                    message.what = 4;
                     handler.sendMessage(message);
                 }
 

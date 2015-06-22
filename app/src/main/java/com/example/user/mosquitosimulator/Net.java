@@ -32,11 +32,6 @@ public class Net extends View{
                 (int) height, matrix, true);
         return bitmap;
     }
-   /* public static Bitmap makeNetBitmap(double newWidth,
-                                       double newHeight){
-        Bitmap netBitmapTemp = BitmapFactory.decodeResource(getResources(),
-                R.drawable.net);
-        return
-    }*/
+
 
 }

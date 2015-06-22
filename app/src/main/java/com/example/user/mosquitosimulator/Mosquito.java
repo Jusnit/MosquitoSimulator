@@ -28,76 +28,55 @@ import java.util.Random;
 
 /**
  * Created by user on 2015/5/10.
+ * 主要的遊戲介面View
  */
 public class Mosquito extends View implements View.OnTouchListener{
-   /* public static int getMosId(){
-        return R.id.mosquito; }*/
     private Thread currentThread = Thread.currentThread();
     private int netSleepTime = (MainActivity.difficulty == 0)?8:5;
-   // private Vibrator vibrator ;
     public double timeFlag = SystemClock.uptimeMillis();
     private VProcessor vProcessor;
     public int progress = 0;
     public Thread checkThread;
     private boolean firstNet = true;
-    private boolean checkStart = false;
     private boolean signalProcessingStart = false;
     private Life life;
     private Object synKey = new Object();
     private View view = this;
-    private float speedConst = (float)0.005;//v = speedConst*distant
-    private Bitmap mosBitmap,mosShockedBitmap,mosBurnedBitmap,mosTempBitmap,disMosBitmap;
+    //v = speedConst*distant
+    private float speedConst = (float)0.005;
+    //Drawable Resources
     public Drawable mosDrawable,mosShockedDrawable,mosBurnedDrawable,disMosDrawable,baseDrawable,disBaseDrawable,angryBaseDrawable,sleepBaseDrawable;
     private int windowWidth, windowHeight;
-    //position of mosquito
+    //Position of mosquito
     public boolean test = false;
     public float x;
     public float y;
     private float lastX, lastY;
-    //private float netX,netY = 200;
-    private boolean die = false;
     private boolean netStart = false;
-    private boolean netIntialized = false;
-    private boolean netDrawStart = false;
-    private int whichMos = 0;// 0 = original Mos, 1 = shocked Mos.
     public float mosSize = 100,netSize= (MainActivity.difficulty == 0)?150:200;
-    private Bitmap baseBitmap;
     private Bitmap netBitmap;
-    private long timePass = 0,timePassForDraw = 0;
+    private long timePass = 0;
     private Rect mosRect;
     private float mosRectRate = (float)0.65;
     private ArrayList<netRunnable> netArray = new ArrayList<netRunnable>();
-    private ArrayList<netRunnable> netArrayCopy = new ArrayList<netRunnable>();
     Activity mainActivity;
     private checkIntersect intersectCheck;
 
     public Mosquito(Context context,int windowWidth,int windowHeight,Activity mainActivity) {
         super(context);
-        //ImageView mosquitoImage = (ImageView)findViewById(getMosId());
         this.mainActivity = mainActivity;
-        //this.vibrator = (Vibrator) this.mainActivity.getApplication().getSystemService(Service.VIBRATOR_SERVICE);
 
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         x =  windowWidth/2;
         y =  windowHeight/2;
-        /*mosBitmap = BitmapFactory.decodeResource(getResources(),
-                R.drawable.mosquito);
-        mosBitmap = zoomImage(mosBitmap, mosSize, mosSize);*/
-        //disMosBitmap = mosBitmap;
         life = new Life(this);
         mosDrawable = getResources().getDrawable(R.drawable.mosquito100);
         disMosDrawable = mosDrawable;
         mosShockedDrawable = getResources().getDrawable(R.drawable.shocked100);
         mosBurnedDrawable = getResources().getDrawable(R.drawable.burned100);
-        /*mosShockedBitmap = zoomImage(BitmapFactory.decodeResource(getResources(),
-                R.drawable.shocked),mosSize,mosSize);
-        mosBurnedBitmap = zoomImage(BitmapFactory.decodeResource(getResources(),
-                R.drawable.burned),mosSize,mosSize);*/
         netBitmap = zoomImage(BitmapFactory.decodeResource(getResources(),
                 R.drawable.net),netSize,netSize);
-
-        //baseBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.sleepingman_resize);
         baseDrawable = getResources().getDrawable(R.drawable.cartoonman);
         baseDrawable.setBounds(0,0,windowWidth,windowHeight);
         angryBaseDrawable = getResources().getDrawable(R.drawable.cartoonman2);
@@ -105,12 +84,9 @@ public class Mosquito extends View implements View.OnTouchListener{
         sleepBaseDrawable = getResources().getDrawable(R.drawable.cartoonman3);
         sleepBaseDrawable.setBounds(0,0,windowWidth,windowHeight);
         disBaseDrawable = sleepBaseDrawable;
-       // canvas = new Canvas(baseBitmap);
-
         mosRect = new Rect((int)(x*mosRectRate),(int)(y*mosRectRate),(int)(mosRectRate*(x+mosSize)),(int)(mosRectRate*(y+mosSize)));
         lastX = x;
         lastY = y;
-       // canvas.drawBitmap(kangoo, mXpos, mYpos, null);
         intersectCheck = new checkIntersect(synKey,netArray,mosRect,this,mainActivity,life);
         vProcessor = new VProcessor(this,intersectCheck,mainActivity);
         setOnTouchListener(this);
@@ -122,16 +98,10 @@ public class Mosquito extends View implements View.OnTouchListener{
        // Log.v("customed", "OnDrawing...");
        Paint paint = new Paint();
         //要改,x.y是指左上角,非中央
-       // canva.drawBitmap(baseBitmap, 0, 0, paint);
         disBaseDrawable.draw(canva);
         //draw the fury bar.
         //canvas.drawRect(float left, float top, float right , float bottom, Paint paint);
         life.drawHeart(canva ,paint);
-      //  Log.v("customed", "DrawBackgroundt");
-        //Bitmap mosBitmap = chooseMos(whichMos);
-        //mosBitmap = zoomImage(mosBitmap, mosSize, mosSize);
-
-        //canva.drawBitmap(disMosBitmap, x - mosSize / 2, y - mosSize / 2, paint);
         if(test) {
             Log.v("customed", "產生電擊動畫");
         }
@@ -144,132 +114,60 @@ public class Mosquito extends View implements View.OnTouchListener{
         canva.drawRect( 20, windowHeight/4 - 225, 40,windowHeight/4, paint2);
         paint2.setColor(Color.YELLOW);
         canva.drawRect( 20, windowHeight/4 - 225*((float)progress/100), 40,windowHeight/4, paint2);
-        //mosBitmap.recycle();
-
      //   synchronized (synKey) {
         if (!test) {
-           /* if(!netDrawStart) {
-                netDrawStart = true;
-                drawNetThread(netArray, canva, paint);
-            }*/
             if (!netArray.isEmpty()) {
-                //drawNetThread(netBitmap,netArray,canva, paint);
-               // if(!netArrayCopy.isEmpty())
-               //    netArrayCopy.addAll(netArray);
-                // Log.v("customed", "refresh NET!! ThreadCount" + String.valueOf(Thread.activeCount()));
-
                 for (netRunnable netTemp : netArray) {
                     if (intersectCheck.die || vProcessor.win)
                         break;
                     if(netTemp.visible)
                        // canva.drawBitmap(netBitmap, netTemp.netX, netTemp.netY, paint);
                         canva.drawBitmap(netBitmap, netTemp.matrix,  paint);
-
-                } //HERE!!!
+                }
                 checkThread = new Thread(intersectCheck);
                 checkThread.start();
                 try {
-                 //   Log.i("customed","if裡面");
+                 //   Log.i("customed","if裡");
                     checkThread.join();
                 }catch(Exception e){}
                 synchronized (synKey) {
                     synKey.notifyAll();
-                  //  Log.i("customed","if出來");
-
+                  //  Log.i("customed","if外");
                 }
             }
             else{
                 synchronized (synKey) {
-                   // Log.i("customed","else裡面");
+                   // Log.i("customed","else裡");
                     firstNet = true;
                     synKey.notifyAll();
-                   // Log.i("customed","else出來");
-
+                   // Log.i("customed","else外");
                 }
             }
         }
-      //  }//synchronized
-       // canva.drawCircle(x, y, 10, paint);
-        //canva.drawCircle(x+100,y+100,10,paint);
-        //Log.v("customed","Drawx:"+String.valueOf(x)+", Drawy:"+String.valueOf(y));
-       // Log.v("customed","mosquito.width:"+String.valueOf(mosBitmap.getWidth())+", mosquito.Height:"+String.valueOf(mosBitmap.getHeight()));
     }
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         if (!intersectCheck.die){
             if(!netStart)
                 netCreated();
-        /*netIntialized = ifCreateNet();
-        if(netIntialized){
-            Log.v("customed", "net initialized!!");
-           // Thread netThread = new Thread(new netRunnable(this));
-            //netThread.start();
-            new Thread( (new netThreadStart(this))).start();*/  //original  version.
-            /*Thread netThreadStart = new Thread(){
-                @Override
-                public void run() {
-                    synchronized(view){
-                        netThread.start();
-                    }
-                }
-            };*/
-           // netIntialized = true;
-
-
             if(!signalProcessingStart) {
                 signalProcessingStart = true;
                 (vProcessor).RecordStart();
             }
         switch(event.getAction()) {
-
             case MotionEvent.ACTION_MOVE: {
-           /* float locationX = event.getX(), locationY = event.getY();
-            if (locationX < x ||locationX > x+mosBitmap.getWidth()
-                    || locationY > y+mosBitmap.getHeight() || locationY < y)  {
-                Log.v("customed","x:"+String.valueOf(x)+", y:"+String.valueOf(y)+"\nx+mosBitmap.getWidth: "+String.valueOf(x+mosBitmap.getWidth())
-                +",y+mosBitmap.getHeight(): "+String.valueOf(y+mosBitmap.getHeight())+"\nevent.getX:"+String.valueOf(locationX)
-                +",event.getY:"+String.valueOf(event.getY()));
-                break;
-            }*/
                 mosRunnable mosrunnable = new mosRunnable(this, event.getX(), event.getY());
                 Thread thread = new Thread(mosrunnable);
                 thread.start();
-               // Log.v("customed","產生新mosquitoThread");
-              /*  if(!checkStart){
-                    checkStart = true;
-                    checkThread = new Thread(intersectCheck);
-                    checkThread.start();
-
-                }*/
-                //  Log.v("customed","thread.Id=:"+thread.getId());
-                //  Log.v("customed"," Thread.activeCount()=:"+ Thread.activeCount());
             }
         }
     }
         return true;
     }
-
+//Function to create mosquito nets
     private void netCreated() {
         netStart = true;
-        /*if (!die) {
-            netIntialized = ifCreateNet();
-                if (netIntialized) {
-
-                Log.v("customed", "net initialized!!");
-                // Thread netThread = new Thread(new netRunnable(this));
-                //netThread.start();*/
         new Thread((new netThreadStart(this))).start();
-            /*Thread netThreadStart = new Thread(){
-                @Override
-                public void run() {
-                    synchronized(view){
-                        netThread.start();
-                    }
-                }
-            };*/
-                // netIntialized = true;
-
-
     }
     public Handler handler = new Handler(){
         @Override
@@ -288,9 +186,7 @@ public class Mosquito extends View implements View.OnTouchListener{
             this.newy = newy;
             this.view = view;
         }
-
         public void run(){
-            //float scale = Math.abs(newy-(float)(y+0.5*mosSize))/Math.abs(newx-(float)(x+0.5*mosSize));
             float scale = Math.abs(newy-y)/Math.abs(newx-x);
             while(newx != x && newy != y && checkTouch()){
                 if(newx > x){
@@ -298,7 +194,6 @@ public class Mosquito extends View implements View.OnTouchListener{
                    // lastX = x;
                     if(newx < x) {
                         x = newx;
-                        //lastX = x;
                     }
                 }
                 else if(newx < x){
@@ -306,7 +201,6 @@ public class Mosquito extends View implements View.OnTouchListener{
                    // lastX = x;
                     if(newx >x) {
                         x = newx;
-                       // lastX = x;
                     }
                 }
                 if(newy >y){
@@ -314,7 +208,6 @@ public class Mosquito extends View implements View.OnTouchListener{
                    // lastY = y;
                     if(newy<y) {
                         y = newy;
-                        //lastY = y;
                     }
 
                 }
@@ -323,65 +216,12 @@ public class Mosquito extends View implements View.OnTouchListener{
                    // lastY = y;
                     if(newy > y) {
                         y = newy;
-                       // lastY = y;
                     }
                 }
                 mosRect.offsetTo((int)(x-mosSize/2+mosSize*(1-mosRectRate)*4/5), (int)(y-mosSize/2+mosSize*(1-mosRectRate)/2));
                 Message msg2 = Message.obtain();
                 msg2.obj = view;
                 handler.sendMessage(msg2);
-                /* try{
-
-                     synchronized(synKey) {
-                         if (!netArray.isEmpty()) {
-
-                             for (netRunnable netTemp : netArray) {
-                                 if (mosRect.intersect(netTemp.netRect)) {
-                                     test = true;
-                                     die = true;
-                                     int counter = 1;
-                                     while (counter <= 15) {
-                                         // if (ifDraw()) {
-                                         if (counter % 2 != 0) {
-                                             whichMos = 1;
-                                             chooseMos(whichMos);
-                                             Log.v("customed", "變藍");
-                                         } else {
-                                             whichMos = 0;
-                                             chooseMos(whichMos);
-                                             Log.v("customed", "變黃的");
-                                         }
-                                         counter++;
-                                         //}
-                                         Message msg3 = Message.obtain();
-                                         msg3.obj = view;
-                                         handler.sendMessage(msg3);
-                                         Thread.sleep(100);
-
-                                     }
-                                     whichMos = 2;
-                                     chooseMos(whichMos);
-                                     Message msg3 = Message.obtain();
-                                     msg3.obj = view;
-                                     handler.sendMessage(msg3);
-                                     Thread.sleep(1200);
-                                     Intent intent = new Intent(mainActivity, LoseActivity.class);
-                                     Log.v("customed", "Intersect123");
-                                     mainActivity.startActivity(intent);
-                                     mainActivity.finish();
-                                     break;
-                                 }
-
-                             }
-                         }
-                     }
-                     Message msg = Message.obtain();
-                     msg.obj = view;
-                     handler.sendMessage(msg);
-                     //Thread.sleep(50);
-                 }catch(Exception e){
-                     Log.v("customed", "MosquitoException..."+e.getMessage());
-                 }*/
 
             }
             lastX = x;
@@ -467,7 +307,6 @@ public class Mosquito extends View implements View.OnTouchListener{
                     }
                 }
             }
-            //}
                 while (!done) {
                     netX = (leftOrNot) ? netX - speed : netX + speed;
                     netY = (UpOrNot) ? netY - speed * scale : netY + speed * scale;
@@ -486,7 +325,6 @@ public class Mosquito extends View implements View.OnTouchListener{
                     }
                     if (netX >= 520 || netX <= -netSize || netY >= 960 || netY <= -netSize) {
                         done = true;
-                         //synchronized (this) {
                         //Log.v("customed", "Remove Net from ArrayList!");
                         synchronized (synKey) {
                             try {
@@ -500,8 +338,6 @@ public class Mosquito extends View implements View.OnTouchListener{
                                 e.printStackTrace();
                             }
                         }
-                        //netArray.remove(this);
-                        //}
                     }
                 }
 
@@ -515,16 +351,14 @@ public class Mosquito extends View implements View.OnTouchListener{
         }
         public void run(){
             while (!intersectCheck.die && !vProcessor.win) {
-                //netIntialized = ifCreateNet();
                 if (ifCreateNet()) {
-                    //synchronized (synKey) {
                         new Thread((new netRunnable(this.view))).start();
-                   // }
                 }
             }
         }
     }
     private boolean ifCreateNet(){
+        //timethreshold用來決定蚊拍產生頻率
         double timethreshold = (MainActivity.difficulty == 0)?2000.0*Math.pow((1-0.74*(progress/100.0)),2.0):1000.0*Math.pow((1-0.74*(progress/100.0)),2.0);
         if (SystemClock.uptimeMillis()-timePass > timethreshold){
             timePass = SystemClock.uptimeMillis();
@@ -532,32 +366,8 @@ public class Mosquito extends View implements View.OnTouchListener{
         }
         return false;
     }
-    private boolean ifDraw(){
-        if (SystemClock.uptimeMillis()-timePassForDraw >200){
-            timePassForDraw = SystemClock.uptimeMillis();
-            return true;
-        }
-        return false;
-    }
-    public void chooseMos(int whichMos){
-       // Bitmap mosTemp = null;
-        switch(whichMos){
-            case 0:
-               // disMosBitmap = mosBitmap;
-                disMosDrawable = mosDrawable;
 
-                break;
-            case 1:
-               // disMosBitmap =mosShockedBitmap;
-                disMosDrawable = mosShockedDrawable;
-                break;
-            case 2:
-                disMosDrawable = mosBurnedDrawable;
-                //disMosBitmap = mosBurnedBitmap;
-
-        }
-        //return mosTemp;
-    }
+    //function used to zoom pictures
     public static Bitmap zoomImage(Bitmap bgimage, double newWidth,
                                    double newHeight) {
         // get Height and Width of the picture
@@ -578,40 +388,8 @@ public class Mosquito extends View implements View.OnTouchListener{
         return (float)(speedConst*(Math.abs(x -0.66*mosSize-( netX))));
     }
 
-    class drawNetRunnable implements Runnable{
-        private Bitmap innerNetBit ;
-        private ArrayList<netRunnable> netSet;
-        private Canvas canva;
-        private Paint paint;
-        public drawNetRunnable(Bitmap bitmap,ArrayList<netRunnable> netSet,Canvas canva,Paint paint){
-            this.innerNetBit = bitmap;
-            this.netSet = netSet;
-            this.canva = canva;
-            this.paint = paint;
-        }
-        public void run() {
-            if(!netArrayCopy.isEmpty())
-                netArrayCopy.clear();
-            netArrayCopy.addAll(netArray);
-            paint = new Paint();
-            for (netRunnable netTemp : netArrayCopy) {
-                if (intersectCheck.die)
-                    break;
-               /* if(canva == null||innerNetBit==null||netArrayCopy == null||paint == null)
-                    Log.i("customed","Something is null!!");
-                else
-                    Log.i("customed","No one is null!!");*/
-                canva.drawBitmap(innerNetBit, netTemp.netX, netTemp.netY, paint);
-                Message msg2 = Message.obtain();
-                msg2.obj = view;
-                handler.sendMessage(msg2);
-               // canva.drawRect(netTemp.netRect, paint);
-            }
-        }
-    }
-    public void drawNetThread(Bitmap bitmap,ArrayList<netRunnable> netSet,Canvas canva,Paint paint){
-        (new Thread(new drawNetRunnable(bitmap,netSet,canva,paint))).start();
-    }
+
+
 
 
 }

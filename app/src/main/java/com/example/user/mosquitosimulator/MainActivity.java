@@ -16,10 +16,9 @@ import android.widget.TextView;
 
 
 public class MainActivity extends Activity {
-    public static byte difficulty = 0;// 0 for Easy(default), 1 for Hard
-    //TextView modeText = (TextView)findViewById(R.id.modeText);
+    // 0 for Easy(default), 1 for Hard
+    public static byte difficulty = 0;
     private static String mode = "Newbie Mode";
-   // ImageView mosquito = (ImageView)findViewById(Mosquito.getMosId());
     Mosquito mosquito;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +30,7 @@ public class MainActivity extends Activity {
             setContentView(mosquito,new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT));
             return;
         }
-
+        //Menu Scene
         setContentView(R.layout.menu);
         TextView modeText = (TextView)findViewById(R.id.modeText);
         modeText.setText(mode);
@@ -55,6 +54,7 @@ public class MainActivity extends Activity {
     public void setting(View view){
         setContentView(R.layout.difficulty);
     }
+    //Choose the difficulty desired
     public void chooseEasy(View view){
         difficulty = 0;
         mode = "Newbie Mode";
